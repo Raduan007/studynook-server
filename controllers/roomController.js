@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Room = require('../models/Room');
 
 // @desc    Create a new room
@@ -73,6 +74,10 @@ const getLatestRooms = async (req, res) => {
 // @access  Public
 const getSingleRoom = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
     const room = await Room.findById(req.params.id);
     
     if (!room) {
