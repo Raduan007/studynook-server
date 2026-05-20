@@ -29,11 +29,26 @@ app.get('/', (req, res) => {
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('Connected to MongoDB successfully');
-    // Start Server
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
   })
   .catch((err) => {
     console.error('MongoDB connection error:', err);
+    process.exit(1);
   });
+
+// 404 Handler
+app.use((req, res, next) => {
+  res.status(404).json({ message: 'API route not found' });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  res.status(statusCode).json({
+    message: err.message,
+    // Hide stack trace in production for security
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+  });
+});

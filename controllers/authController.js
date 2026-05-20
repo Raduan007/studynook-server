@@ -21,10 +21,10 @@ const login = async (req, res) => {
 
     // 2. Store token in HTTP-only cookie
     res.cookie('token', token, {
-      httpOnly: true, // Prevents client-side JS from reading the cookie
-      secure: process.env.NODE_ENV === 'production', // Send only over HTTPS in production
-      sameSite: 'strict', // Protects against CSRF attacks
-      maxAge: 24 * 60 * 60 * 1000 // 1 day in milliseconds
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      maxAge: 24 * 60 * 60 * 1000 
     });
 
     res.status(200).json({ message: 'Login successful', user });
@@ -38,7 +38,7 @@ const logout = (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
   });
   
   res.status(200).json({ message: 'Logged out successfully' });
