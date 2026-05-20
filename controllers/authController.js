@@ -2,15 +2,16 @@ const jwt = require('jsonwebtoken');
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, uid } = req.body;
     
-    // Example validation (replace with actual DB check)
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
+    // The user is already authenticated by Firebase on the frontend.
+    // We just need to issue a JWT session cookie for the API.
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
     }
 
-    // Mock user data
-    const user = { id: '12345', email };
+    // Use Firebase UID as the internal ID
+    const user = { id: uid || '12345', email };
 
     // 1. Generate JWT
     const token = jwt.sign(
