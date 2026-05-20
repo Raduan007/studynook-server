@@ -25,6 +25,10 @@ const roomSchema = new mongoose.Schema({
   floor: {
     type: Number,
   },
+  image: {
+    type: String,
+    default: '',
+  },
   bookingCount: {
     type: Number,
     default: 0,
