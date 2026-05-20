@@ -136,6 +136,18 @@ const deleteRoom = async (req, res) => {
   }
 };
 
+// @desc    Get rooms created by logged in user
+// @route   GET /api/rooms/my-rooms
+// @access  Private
+const getMyRooms = async (req, res) => {
+  try {
+    const rooms = await Room.find({ owner: req.user.id }).sort({ createdAt: -1 });
+    res.status(200).json(rooms);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching your rooms', error: error.message });
+  }
+};
+
 module.exports = {
   createRoom,
   getAllRooms,
@@ -143,4 +155,5 @@ module.exports = {
   getSingleRoom,
   updateRoom,
   deleteRoom,
+  getMyRooms,
 };

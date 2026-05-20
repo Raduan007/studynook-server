@@ -7,6 +7,7 @@ const {
   getSingleRoom,
   updateRoom,
   deleteRoom,
+  getMyRooms,
 } = require('../controllers/roomController');
 const { verifyToken } = require('../middlewares/authMiddleware');
 
@@ -16,6 +17,7 @@ router.get('/latest', getLatestRooms); // Declared before /:id to prevent it fro
 router.get('/:id', getSingleRoom);
 
 // Protected routes (Require JWT token AND controller validates owner match)
+router.get('/my-rooms', verifyToken, getMyRooms);
 router.post('/', verifyToken, createRoom);
 router.put('/:id', verifyToken, updateRoom);
 router.delete('/:id', verifyToken, deleteRoom);
