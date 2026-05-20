@@ -56,9 +56,11 @@ const createBooking = async (req, res) => {
 
     const savedBooking = await newBooking.save();
 
-    // 4. Increment room booking count
-    roomExists.bookingCount += 1;
-    await roomExists.save();
+    // 4. Increment room booking count and use $push to add active booking
+    await Room.findByIdAndUpdate(room, {
+      $inc: { bookingCount: 1 },
+      $push: { activeBookings: savedBooking._id }
+    });
 
     res.status(201).json({
       message: 'Booking successful',
@@ -70,6 +72,58 @@ const createBooking = async (req, res) => {
   }
 };
 
+// @desc    Get user's bookings
+// @route   GET /api/bookings/my-bookings
+// @access  Private
+const getMyBookings = async (req, res) => {
+  try {
+    const bookings = await Booking.find({ user: req.user.id })
+      .populate('room', 'title price')
+      .sort({ bookingDate: -1 });
+
+    res.status(200).json(bookings);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching your bookings', error: error.message });
+  }
+};
+
+// @desc    Cancel a booking
+// @route   PUT /api/bookings/:id/cancel
+// @access  Private
+const cancelBooking = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    // Verify ownership
+    if (booking.user !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to cancel this booking' });
+    }
+
+    if (booking.status === 'cancelled') {
+      return res.status(400).json({ message: 'Booking is already cancelled' });
+    }
+
+    // Update booking status
+    booking.status = 'cancelled';
+    await booking.save();
+
+    // Use $pull to remove booking from the room's activeBookings array
+    await Room.findByIdAndUpdate(booking.room, {
+      $pull: { activeBookings: booking._id }
+    });
+
+    res.status(200).json({ message: 'Booking cancelled successfully', booking });
+  } catch (error) {
+    res.status(500).json({ message: 'Error cancelling booking', error: error.message });
+  }
+};
+
 module.exports = {
-  createBooking
+  createBooking,
+  getMyBookings,
+  cancelBooking
 };

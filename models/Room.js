@@ -29,6 +29,10 @@ const roomSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  activeBookings: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Booking',
+  }],
   owner: {
     type: String, // Stored as a string to match our mocked req.user.id setup
     required: [true, 'Room owner is required'],

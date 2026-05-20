@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { createBooking } = require('../controllers/bookingController');
+const { createBooking, getMyBookings, cancelBooking } = require('../controllers/bookingController');
 const { verifyToken } = require('../middlewares/authMiddleware');
 
-// Protected route to create booking
+// Protected routes
+router.get('/my-bookings', verifyToken, getMyBookings);
 router.post('/', verifyToken, createBooking);
+router.put('/:id/cancel', verifyToken, cancelBooking);
 
 module.exports = router;
