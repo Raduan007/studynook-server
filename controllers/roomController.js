@@ -22,12 +22,34 @@ const createRoom = async (req, res) => {
   }
 };
 
-// @desc    Get all rooms
+// @desc    Get all rooms (with optional search and filters)
 // @route   GET /api/rooms
 // @access  Public
 const getAllRooms = async (req, res) => {
   try {
-    const rooms = await Room.find().sort({ createdAt: -1 });
+    const { search, amenities, floor, minRate, maxRate } = req.query;
+    let query = {};
+
+    // Search by room name
+    if (search) query.title = { $regex: search, $options: 'i' };
+
+    // Filter by amenities ($in)
+    if (amenities) {
+      const amenitiesArr = amenities.split(',').map(a => a.trim());
+      query.amenities = { $in: amenitiesArr };
+    }
+
+    // Optional floor filter
+    if (floor) query.floor = Number(floor);
+
+    // Optional rate (price) filter
+    if (minRate || maxRate) {
+      query.price = {};
+      if (minRate) query.price.$gte = Number(minRate);
+      if (maxRate) query.price.$lte = Number(maxRate);
+    }
+
+    const rooms = await Room.find(query).sort({ createdAt: -1 });
     res.status(200).json(rooms);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching rooms', error: error.message });

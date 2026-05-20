@@ -18,6 +18,13 @@ const roomSchema = new mongoose.Schema({
     type: Number,
     default: 1,
   },
+  amenities: {
+    type: [String],
+    default: [],
+  },
+  floor: {
+    type: Number,
+  },
   owner: {
     type: String, // Stored as a string to match our mocked req.user.id setup
     required: [true, 'Room owner is required'],
