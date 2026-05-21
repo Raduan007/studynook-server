@@ -13,11 +13,15 @@ const { verifyToken } = require('../middlewares/authMiddleware');
 
 // Public routes
 router.get('/', getAllRooms);
-router.get('/latest', getLatestRooms); // Declared before /:id to prevent it from matching as an ID parameter
+router.get('/latest', getLatestRooms);
+
+// Protected named routes — must be declared before /:id to avoid being matched as an ID
+router.get('/my-rooms', verifyToken, getMyRooms);
+
+// Public dynamic routes
 router.get('/:id', getSingleRoom);
 
-// Protected routes (Require JWT token AND controller validates owner match)
-router.get('/my-rooms', verifyToken, getMyRooms);
+// Protected dynamic routes
 router.post('/', verifyToken, createRoom);
 router.put('/:id', verifyToken, updateRoom);
 router.delete('/:id', verifyToken, deleteRoom);

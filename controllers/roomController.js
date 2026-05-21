@@ -6,7 +6,7 @@ const Room = require('../models/Room');
 // @access  Private
 const createRoom = async (req, res) => {
   try {
-    const { name, title, description, price, hourlyRate, capacity, floor, image, amenities } = req.body;
+    const { name, title, description, price, hourlyRate, capacity, floor, image, amenities, ownerEmail } = req.body;
 
     // Support both frontend field names and schema field names
     const roomTitle = name || title;
@@ -25,6 +25,7 @@ const createRoom = async (req, res) => {
       image: image || '',
       amenities: amenities || [],
       owner: req.user.id,
+      ownerEmail: ownerEmail || req.user.email || '',
     });
 
     const savedRoom = await newRoom.save();
@@ -112,14 +113,21 @@ const updateRoom = async (req, res) => {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    // Owner verification
-    if (room.owner !== req.user.id) {
+    // Owner verification — check by UID or by email as fallback
+    const isOwnerById = room.owner && room.owner.toString() === req.user.id.toString();
+    const isOwnerByEmail = room.ownerEmail && req.user.email && room.ownerEmail === req.user.email;
+    if (!isOwnerById && !isOwnerByEmail) {
       return res.status(403).json({ message: 'User not authorized to update this room' });
     }
 
+    // Map frontend field names to schema field names
+    const updateData = { ...req.body };
+    if (updateData.name) { updateData.title = updateData.name; delete updateData.name; }
+    if (updateData.hourlyRate) { updateData.price = Number(updateData.hourlyRate); delete updateData.hourlyRate; }
+
     const updatedRoom = await Room.findByIdAndUpdate(
       req.params.id,
-      { $set: req.body },
+      { $set: updateData },
       { new: true, runValidators: true }
     );
 
@@ -140,8 +148,10 @@ const deleteRoom = async (req, res) => {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    // Owner verification
-    if (room.owner !== req.user.id) {
+    // Owner verification — check by UID or by email as fallback
+    const isOwnerById = room.owner && room.owner.toString() === req.user.id.toString();
+    const isOwnerByEmail = room.ownerEmail && req.user.email && room.ownerEmail === req.user.email;
+    if (!isOwnerById && !isOwnerByEmail) {
       return res.status(403).json({ message: 'User not authorized to delete this room' });
     }
 
@@ -157,7 +167,12 @@ const deleteRoom = async (req, res) => {
 // @access  Private
 const getMyRooms = async (req, res) => {
   try {
-    const rooms = await Room.find({ owner: req.user.id }).sort({ createdAt: -1 });
+    // Support lookup by owner UID or by ownerEmail
+    const query = req.user.email
+      ? { $or: [{ owner: req.user.id }, { ownerEmail: req.user.email }] }
+      : { owner: req.user.id };
+
+    const rooms = await Room.find(query).sort({ createdAt: -1 });
     res.status(200).json(rooms);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching your rooms', error: error.message });
