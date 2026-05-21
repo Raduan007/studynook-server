@@ -6,14 +6,25 @@ const Room = require('../models/Room');
 // @access  Private
 const createRoom = async (req, res) => {
   try {
-    const { title, description, price, capacity } = req.body;
+    const { name, title, description, price, hourlyRate, capacity, floor, image, amenities } = req.body;
+
+    // Support both frontend field names and schema field names
+    const roomTitle = name || title;
+    const roomPrice = hourlyRate || price;
+
+    if (!roomTitle || !description || !roomPrice) {
+      return res.status(400).json({ message: 'Room name, description, and hourly rate are required.' });
+    }
 
     const newRoom = new Room({
-      title,
+      title: roomTitle,
       description,
-      price,
-      capacity,
-      owner: req.user.id, // Attached by verifyToken middleware
+      price: Number(roomPrice),
+      capacity: Number(capacity) || 1,
+      floor: Number(floor) || 0,
+      image: image || '',
+      amenities: amenities || [],
+      owner: req.user.id,
     });
 
     const savedRoom = await newRoom.save();
