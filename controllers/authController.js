@@ -1,4 +1,25 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+
+const register = async (req, res) => {
+  try {
+    const { uid, name, email, photoURL } = req.body;
+    if (!uid || !name || !email) {
+      return res.status(400).json({ message: 'UID, name, and email are required' });
+    }
+
+    // Check if user already exists
+    let user = await User.findOne({ uid });
+    if (!user) {
+      user = new User({ uid, name, email, photoURL });
+      await user.save();
+    }
+
+    res.status(201).json({ message: 'User registered successfully', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error during registration', error: error.message });
+  }
+};
 
 const login = async (req, res) => {
   try {
@@ -52,6 +73,7 @@ const getProfile = (req, res) => {
 }
 
 module.exports = {
+  register,
   login,
   logout,
   getProfile
