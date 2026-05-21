@@ -6,6 +6,7 @@ const { verifyToken } = require('../middlewares/authMiddleware');
 // Protected routes
 router.get('/my-bookings', verifyToken, getMyBookings);
 router.post('/', verifyToken, createBooking);
-router.put('/:id/cancel', verifyToken, cancelBooking);
+router.patch('/:id/cancel', verifyToken, cancelBooking);
+router.put('/:id/cancel', verifyToken, cancelBooking);  // keep for backwards compat
 
 module.exports = router;
